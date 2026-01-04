@@ -3,7 +3,12 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 3
-  tags: []
+  tags:
+  - BunsBox
+  - Countertop
+  - Furnace
+  - SausageBox
+  - Customer
   layers:
   - Default
   - TransparentFX
@@ -11,9 +16,9 @@ TagManager:
   - Environment
   - Water
   - UI
-  - 
-  - 
-  - 
+  - Interactable_environment
+  - Customer
+  - Interactable_items
   - 
   - 
   - 
