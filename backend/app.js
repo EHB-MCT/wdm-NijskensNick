@@ -20,6 +20,7 @@ const SERVER_PORT = process.env.SERVER_PORT;
 const DATABASE_STANDINGSTILL_COLLECTION = process.env.DATABASE_STANDINGSTILL_COLLECTION;
 const DATABASE_PASSINGTHROUGH_COLLECTION = process.env.DATABASE_PASSINGTHROUGH_COLLECTION;
 const DATABASE_SESSIONS_COLLECTION = process.env.DATABASE_SESSIONS_COLLECTION;
+const DATABASE_DEVICENAME_COLLECTION = process.env.DATABASE_DEVICENAME_COLLECTION;
 
 
 // Connect with database
@@ -31,6 +32,7 @@ const db = client.db(DATABASE_DB);
 const collection_ss = db.collection(DATABASE_STANDINGSTILL_COLLECTION);
 const collection_pt = db.collection(DATABASE_PASSINGTHROUGH_COLLECTION);
 const collection_sessions = db.collection(DATABASE_SESSIONS_COLLECTION);
+const collection_devicenames = db.collection(DATABASE_DEVICENAME_COLLECTION);
 
 // Middleware
 app.use(bodyParser.urlencoded({extended: true}));
@@ -374,6 +376,48 @@ app.route('/Sessions/:id')
             await collection_sessions.deleteOne(query);
             res.status(200).json({
                 message: "Session deleted"
+            });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            client.close();
+        }
+    })
+
+// Devicename Routes
+app.route('/LoggedDeviceNames')
+    .get(async (req, res) => {
+        try {
+            await client.connect();
+            const result = await collection_devicenames.find({}).toArray();
+            res.send(JSON.stringify(result));
+        } catch (err) {
+            console.error(err);
+        } finally {
+            client.close();
+        }
+    })
+    .post(async (req, res) => {
+        if(await collection_devicenames.findOne({deviceName: String(req.body.deviceName)}))
+        {
+            res.status(400).send('Bad request: device already exists');
+            return;
+        }
+        await collection_devicenames.insertOne({deviceName: String(req.body.deviceName)})
+        .then((result) => {
+            console.log("Added device " + String(result.insertedId));
+        })
+    })
+
+app.route('/LoggedDeviceNames/:id')
+    .delete(async (req, res) => {
+        try {
+            await client.connect();
+            var id = new ObjectId(String(req.params.id));
+            const query = {"_id": id};
+            await collection_devicenames.deleteOne(query);
+            res.status(200).json({
+                message: "Device name deleted"
             });
         } catch (err) {
             console.error(err);
