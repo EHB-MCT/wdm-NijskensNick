@@ -52,7 +52,14 @@ public class Player_Interact : MonoBehaviour
             }
             if(hit.collider.CompareTag("Customer"))
             {
-                // Customer opties
+                if(!Player_Inventory_Manager.instance.inventory.HasNoFinishedHotdogs())
+                {
+                    if(hit.collider.gameObject.GetComponent<MoveCustomer>() != null)
+                    {
+                        hit.collider.gameObject.GetComponent<MoveCustomer>().UpdateTargetToEnd();
+                        Player_Inventory_Manager.instance.inventory.RemoveFinishedHotDog();
+                    }
+                }
             }
             if(hit.collider.CompareTag("BunsBox"))
             {
