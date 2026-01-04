@@ -1,0 +1,55 @@
+body {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+h2 {
+    display: flex;
+    justify-content: center;
+}
+
+.contentTable {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dropdown-options {
+    display: flex;
+    justify-content: center;
+}
+
+#StandingStillContent {
+    display: flex;
+    justify-content: center;
+}
+
+table {
+    display: flex;
+    justify-content: center;
+}
+
+tr {
+    display: flex;
+    justify-content: center;
+}
+
+th {
+    border: 1px solid black;
+    width: 200px;
+}
+
+.dropdown {
+    display: flex;
+    justify-content: center;
+}
+
+.deleteButton {
+    border: 1px solid black;
+    border-radius: 5px;
+}
+
+.deleteButton:hover {
+    cursor: pointer;
+}
