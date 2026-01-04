@@ -1,0 +1,18 @@
+version: "3.2"
+
+services:
+  db:
+    image: db:1.0.0
+    container_name: ${DATABASE_HOST}
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    env_file: .env
+    ports:
+      - ${DATABASE_PORT}:${DATABASE_PORT}
+    volumes:
+      - database-v:/data/db
+
+volumes:
+  database-v:
+    name: "database-v"
