@@ -79,7 +79,7 @@ app.route('/StandingStillPairs')
                     console.log("Added device " + String(result.insertedId));
                 })
             }
-            if(!await collection_usernames.findOneAndDelete({"deviceName": String(req.body.deviceName), "userName": String(req.body.userName)}))
+            if(!await collection_usernames.findOne({"deviceName": String(req.body.deviceName), "userName": String(req.body.userName)}))
             {
                 collection_usernames.insertOne({"deviceName": String(req.body.deviceName), "userName": String(req.body.userName)})
                 .then((result) => {
