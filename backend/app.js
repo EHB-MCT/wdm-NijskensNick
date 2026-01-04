@@ -21,6 +21,7 @@ const DATABASE_STANDINGSTILL_COLLECTION = process.env.DATABASE_STANDINGSTILL_COL
 const DATABASE_PASSINGTHROUGH_COLLECTION = process.env.DATABASE_PASSINGTHROUGH_COLLECTION;
 const DATABASE_SESSIONS_COLLECTION = process.env.DATABASE_SESSIONS_COLLECTION;
 const DATABASE_DEVICENAME_COLLECTION = process.env.DATABASE_DEVICENAME_COLLECTION;
+const DATABASE_USERNAME_COLLECTION = process.env.DATABASE_USERNAME_COLLECTION;
 
 
 // Connect with database
@@ -33,6 +34,7 @@ const collection_ss = db.collection(DATABASE_STANDINGSTILL_COLLECTION);
 const collection_pt = db.collection(DATABASE_PASSINGTHROUGH_COLLECTION);
 const collection_sessions = db.collection(DATABASE_SESSIONS_COLLECTION);
 const collection_devicenames = db.collection(DATABASE_DEVICENAME_COLLECTION);
+const collection_usernames = db.collection(DATABASE_USERNAME_COLLECTION);
 
 // Middleware
 app.use(bodyParser.urlencoded({extended: true}));
@@ -418,6 +420,54 @@ app.route('/LoggedDeviceNames/:id')
             await collection_devicenames.deleteOne(query);
             res.status(200).json({
                 message: "Device name deleted"
+            });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            client.close();
+        }
+    })
+
+// Username Routes
+app.route('/LoggedUserNames')
+    .get(async (req, res) => {
+        try {
+            if(req.query.devicename != undefined)
+            {
+                await client.connect();
+                res.send(JSON.stringify(await collection_usernames.find({deviceName: String(req.query.devicename)}).toArray()))
+                return;
+            }
+            await client.connect();
+            const result = await collection_usernames.find({}).toArray();
+            res.send(JSON.stringify(result));
+        } catch (err) {
+            console.error(err);
+        } finally {
+            client.close();
+        }
+    })
+    .post(async (req, res) => {
+        if(await collection_usernames.findOne({deviceName: String(req.body.deviceName), userName: String(req.body.userName)}))
+        {
+            res.status(400).send('Bad request: username already exists for device ' + String(req.body.deviceName));
+            return;
+        }
+        await collection_usernames.insertOne({deviceName: String(req.body.deviceName), userName: String(req.body.userName)})
+        .then((result) => {
+            console.log("Added user " + String(result.insertedId) + " to device " + String(req.body.deviceName));
+        })
+    })
+
+app.route('/LoggedUserNames/:id')
+    .delete(async (req, res) => {
+        try {
+            await client.connect();
+            var id = new ObjectId(String(req.params.id));
+            const query = {"_id": id};
+            await collection_usernames.deleteOne(query);
+            res.status(200).json({
+                message: "Username deleted"
             });
         } catch (err) {
             console.error(err);
