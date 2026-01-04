@@ -18,6 +18,7 @@ const SERVER_HOST = process.env.SERVER_HOST;
 const SERVER_PORT = process.env.SERVER_PORT;
 
 const DATABASE_STANDINGSTILL_COLLECTION = process.env.DATABASE_STANDINGSTILL_COLLECTION;
+const DATABASE_PASSINGTHROUGH_COLLECTION = process.env.DATABASE_PASSINGTHROUGH_COLLECTION;
 
 
 // Connect with database
@@ -27,6 +28,7 @@ const db = client.db(DATABASE_DB);
 
 // Collections
 const collection_ss = db.collection(DATABASE_STANDINGSTILL_COLLECTION);
+const collection_pt = db.collection(DATABASE_PASSINGTHROUGH_COLLECTION);
 
 // Middleware
 app.use(bodyParser.urlencoded({extended: true}));
@@ -141,6 +143,120 @@ app.route('/StandingStillPairs/:id')
             await collection_ss.deleteOne(query);
             res.status(200).json({
                 message: "SSPair deleted"
+            });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            client.close();
+        }
+    })
+
+// Passing Through Routes
+app.route('/PassingThroughPairs')
+    .get(async (req, res) => {
+        try {
+            if(req.query.devicename != undefined)
+            {
+                await client.connect();
+                const query = {"deviceName": String(req.query.devicename)};
+                const result = await collection_pt.find(query).toArray();
+                res.send(JSON.stringify(result));
+                return;
+            }
+            if(req.query.username != undefined)
+            {
+                await client.connect();
+                const query = {"userName": String(req.query.username)};
+                const result = await collection_pt.find(query).toArray();
+                res.send(JSON.stringify(result));
+                return;
+            }
+            await client.connect();
+            res.send(JSON.stringify(await collection_pt.find({}).toArray()))
+        } catch (err) {
+            console.error(err);
+        } finally {
+            client.close();
+        }
+    })
+    .post(async (req, res) => {
+        try {
+            await client.connect();
+            if(!await collection_devicenames.findOne({"deviceName": String(req.body.deviceName)}))
+            {
+                collection_devicenames.insertOne({"deviceName": String(req.body.deviceName)})
+                .then((result) => {
+                    console.log("Added device " + String(result.insertedId));
+                })
+            }
+            if(!await collection_usernames.findOne({"deviceName": String(req.body.deviceName), "userName": String(req.body.userName)}))
+            {
+                collection_usernames.insertOne({"deviceName": String(req.body.deviceName), "userName": String(req.body.userName)})
+                .then((result) => {
+                    console.log("Added user " + String(result.insertedId) + " to device " + String(req.body.deviceName));
+                })
+            }
+            const testQuery = {deviceName: String(req.body.deviceName), userName: String(req.body.userName), startTime: Date(req.body.startTime)}
+            const test = await collection_pt.findOne(testQuery);
+            if(test) {
+                res.status(400).send('Bad request: pair already exists');
+                return;
+            }
+            var newStandingStillPair = {
+                deviceName: req.body.deviceName,
+                userName: req.body.userName,
+                startTime: req.body.startTime,
+                endTime: req.body.endTime,
+                ended: req.body.ended
+            }
+            await collection_pt.insertOne(newStandingStillPair)
+            .then(result => {
+                console.log(String(result.insertedId));
+                res.send(String(result.insertedId));
+            });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            client.close();
+        }
+    })
+
+app.route('/PassingThroughPairs/:id')
+    .get(async (req, res) => {
+        try {
+            await client.connect();
+            var id = new ObjectId(String(req.params.id));
+            const query = {"_id": id};
+            const result = await collection_pt.findOne(query);
+            res.send(JSON.stringify(result));
+        } catch (err) {
+            console.error(err);
+        } finally {
+            client.close();
+        }
+    })
+    .put(async (req, res) => {
+        try {
+            await client.connect();
+            var id = new ObjectId(String(req.params.id));
+            const query = {"_id": id};
+            var updates = { $set: req.body }
+            let updateResult = await collection_pt.updateOne(query, updates);
+            console.log(updateResult._id);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            client.close();
+        }
+    })
+    .delete(async (req, res) => {
+        try {
+            await client.connect();
+            var id = new ObjectId(String(req.params.id));
+            const query = {"_id": id};
+            await collection_pt.deleteOne(query);
+            res.status(200).json({
+                message: "PTPair deleted"
             });
         } catch (err) {
             console.error(err);
